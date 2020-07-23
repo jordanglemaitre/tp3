@@ -1,13 +1,12 @@
-package cci.android.jlocalisation.api
+package com.example.myapplication.api
 
-import retrofit2.Retrofit
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.Retrofit
 
-// le RetroFitHolder contient l'url de base ou on renseignera les détails de la requête dans une interface selon ce que nous voulons récupérer
-object RetroFitHolder {
-    val retrofit: Retrofit = Retrofit.Builder()
+object RetrofitHolder {
+    var retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("http://jdevalik.fr/tpiot/")
         .addConverterFactory(GsonConverterFactory.create())
         .client(OkHttpClient().newBuilder().addInterceptor(HttpLoggingInterceptor().apply {
