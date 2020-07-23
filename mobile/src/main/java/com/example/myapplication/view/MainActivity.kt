@@ -1,10 +1,15 @@
 package com.example.myapplication.View
 
-import androidx.appcompat.app.AppCompatActivity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import com.example.myapplication.R
 import com.example.myapplication.api.RetrofitHolder
 import com.example.myapplication.api.services.JdevalikApiService
@@ -23,6 +28,8 @@ import retrofit2.HttpException
 import retrofit2.await
 
 class MainActivity : AppCompatActivity() {
+
+    private var mNotificationManager: NotificationManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +54,29 @@ class MainActivity : AppCompatActivity() {
         test.setOnClickListener {
             Log.d("Debug", email.text.toString() + password.text.toString())
             // onConnexionClicked(email.text.toString(), password.text.toString())
-            onTestClicked("-50.", "-14.1", "33")
+            // onTestClicked("-50.", "-14.1", "33")
+            EnvoieNotificationSimple("testazdadzad")
         }
+    }
+    fun EnvoieNotificationSimple(title: String?) {
+        //Création de la notification
+        val mBuilder =
+            NotificationCompat.Builder(this.applicationContext, "notify_001")
+        //ajout icone, titre et contenu à la notification
+        mBuilder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
+        mBuilder.setSmallIcon(R.mipmap.ic_launcher)
+        mBuilder.setContentTitle("Nouvelle notification")
+        mBuilder.setContentText(title)
+        //Envoie de la notification sur le téléphone
+        mNotificationManager =
+            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "001"
+        val channel =
+            NotificationChannel(channelId, "Channel", NotificationManager.IMPORTANCE_HIGH)
+        mNotificationManager!!.createNotificationChannel(channel)
+        mBuilder.setChannelId(channelId)
+        //Utilisation de la méthode notify sur l'objet NotificationManager
+        mNotificationManager!!.notify(0, mBuilder.build())
     }
 
     fun onConnexionClicked(pseudo: String, mdp: String) {
