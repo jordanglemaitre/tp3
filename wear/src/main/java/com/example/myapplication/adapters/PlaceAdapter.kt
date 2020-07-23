@@ -30,7 +30,7 @@ class PlaceAdapter(var context: Context, val places: List<Place>) : RecyclerView
     inner class PlaceViewHolder(val view: View): RecyclerView.ViewHolder(view) {
         fun bind(place: Place){
             Log.d("Place6", place.toString())
-            view.textAddress.text = place.lat.toString()
+            view.textAddress.text = place.adresse
         }
     }
 }

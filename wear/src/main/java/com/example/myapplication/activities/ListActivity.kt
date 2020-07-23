@@ -48,6 +48,9 @@ class ListActivity : WearableActivity() {
             GlobalScope.launch {
                 Log.d("Places", it.toString())
                 places = it.await()
+                for (place in places){
+                    place.getAddress(that)
+                }
                 withContext(Dispatchers.Main){
                     places_recycler_view.apply {
                         this.layoutManager = LinearLayoutManager(context)
