@@ -1,5 +1,6 @@
 package com.example.myapplication.api.services
 
+import com.example.myapplication.models.UserResponse
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.http.*
@@ -13,11 +14,11 @@ interface JdevalikApiService {
     ): Call<Any>
 
     @Multipart
-    @POST("getuser.php")
+    @POST("getuserbis.php")
     fun getUser(
         @Part ("pseudo") pseudo : RequestBody,
         @Part ("mdp") mdp : RequestBody
-    ) : Call<Any>
+    ) : Call<UserResponse>
 
     @Multipart
     @POST("insertaddressbis.php")

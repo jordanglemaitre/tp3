@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                     try {
                         it.await().also {
                             withContext(Dispatchers.Main) {
-                                if(it is User) {
+                                if(it.success!!) {
                                     //it.save()
                                     Log.d("Debug", "test")
                                     /*jdevalikApiService.getUser(it.id.toString(), "Bearer " + it.token).also {
