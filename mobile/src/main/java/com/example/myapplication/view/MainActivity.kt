@@ -1,20 +1,16 @@
 package com.example.myapplication.View
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import com.example.myapplication.R
 import com.example.myapplication.api.RetrofitHolder
 import com.example.myapplication.api.services.JdevalikApiService
 import com.example.myapplication.models.User
-import com.google.gson.JsonParser
+import com.google.android.gms.wearable.MessageClient.OnMessageReceivedListener
+import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -27,15 +23,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import retrofit2.await
 
-class MainActivity : AppCompatActivity() {
 
-    private var mNotificationManager: NotificationManager? = null
-
+class MainActivity : AppCompatActivity(), OnMessageReceivedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // Initialize Realm (just once per application)
         Realm.init(this);
 
         var realm = Realm.getDefaultInstance()
@@ -55,28 +47,8 @@ class MainActivity : AppCompatActivity() {
             Log.d("Debug", email.text.toString() + password.text.toString())
             // onConnexionClicked(email.text.toString(), password.text.toString())
             // onTestClicked("-50.", "-14.1", "33")
-            EnvoieNotificationSimple("testazdadzad")
+            // EnvoieNotificationSimple("testazdadzad")
         }
-    }
-    fun EnvoieNotificationSimple(title: String?) {
-        //Création de la notification
-        val mBuilder =
-            NotificationCompat.Builder(this.applicationContext, "notify_001")
-        //ajout icone, titre et contenu à la notification
-        mBuilder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
-        mBuilder.setSmallIcon(R.mipmap.ic_launcher)
-        mBuilder.setContentTitle("Nouvelle notification")
-        mBuilder.setContentText(title)
-        //Envoie de la notification sur le téléphone
-        mNotificationManager =
-            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "001"
-        val channel =
-            NotificationChannel(channelId, "Channel", NotificationManager.IMPORTANCE_HIGH)
-        mNotificationManager!!.createNotificationChannel(channel)
-        mBuilder.setChannelId(channelId)
-        //Utilisation de la méthode notify sur l'objet NotificationManager
-        mNotificationManager!!.notify(0, mBuilder.build())
     }
 
     fun onConnexionClicked(pseudo: String, mdp: String) {
@@ -96,36 +68,13 @@ class MainActivity : AppCompatActivity() {
                                 if(it is User) {
                                     //it.save()
                                     Log.d("Debug", "test")
-                                    /*jdevalikApiService.getUser(it.id.toString(), "Bearer " + it.token).also {
-                                    GlobalScope.launch {
-                                        it.await().also {
-                                            withContext(Dispatchers.Main) {
-                                                if (it.id != 0) {
-                                                    it.save()
-                                                    Log.d("Debug", it.toString())
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Bonjour " + it.identifiant,
-                                                        Toast.LENGTH_SHORT
-                                                    ).show();
-                                                } else {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Erreur lors de la recupération des informations",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }*/
                                 } else {
                                     Log.d("Debug", "yes")
                                 }
                             }
                         }
                     } catch(e: HttpException) {
-                        manageApiErrorResponse(e)
+                        // manageApiErrorResponse(e)
                     }
                 }
             }
@@ -149,15 +98,15 @@ class MainActivity : AppCompatActivity() {
                         withContext(Dispatchers.Main) {
                             try {
                                 //it.save()
-                                if(it !is Boolean) {
+                                if (it !is Boolean) {
                                     Toast.makeText(
                                         context,
                                         "Utilisateur créé avec succès",
                                         Toast.LENGTH_SHORT
                                     ).show();
                                 }
-                            } catch(e: HttpException) {
-                                manageApiErrorResponse(e)
+                            } catch (e: HttpException) {
+                                // manageApiErrorResponse(e)
                             }
                         }
                     }
@@ -166,70 +115,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onTestClicked(lon: String, lat: String, iduser: String) {
-        var context = this
-        val jdevalikApiService: JdevalikApiService =
-            RetrofitHolder.retrofit.create(JdevalikApiService::class.java)
-
-        var lonParam: RequestBody = lon.toRequestBody(lon.toMediaTypeOrNull())
-        var latParam: RequestBody = lat.toRequestBody(lat.toMediaTypeOrNull())
-        var iduserParam: RequestBody = iduser.toRequestBody(iduser.toMediaTypeOrNull())
-        jdevalikApiService.insertAddress(lonParam, latParam, iduserParam).also {
-            GlobalScope.launch {
-                // TODO("implementer try/catch")
-                it.await().also {
-                    withContext(Dispatchers.Main) {
-                        try {
-                            //it.save()
-                            if (it !is Boolean) {
-                                Toast.makeText(
-                                    context,
-                                    "Adresse créée avec succès",
-                                    Toast.LENGTH_SHORT
-                                ).show();
-                            }
-                        } catch (e: HttpException) {
-                            manageApiErrorResponse(e)
-                        }
-                    }
-                }
-            }
-        }
+    override fun onPostResume() {
+        super.onPostResume()
+        Wearable.getMessageClient(this).addListener(this)
     }
 
-    fun manageApiErrorResponse(e: HttpException) {
-        // Déclaration et initialisation d'un message d'erreur à vide
-        var message = ""
-        // Parse de l'objet Json sous forme de tableau de string
-        val errorsArray = JsonParser().parse(e.response()?.errorBody()?.string()?.trim())
-            .asJsonObject["errors"]
-            .asJsonArray
-        // Parcours du tableau d'erreurs
-        errorsArray.forEach { item ->
-            if (message == "") {
-                // Premier message du tableau
-                message = item.toString()
-            } else {
-                // Concaténation du message pour former une seule string avec retour à la ligne
-                message += System.lineSeparator() + item.toString()
-            }
-        }
-        message = message.replace("\"", "")
-
-        // Si le message d'erreur n'a pas été initialisé
-        if (message == null || message == "") {
-            // Assignation d'un message d'erreur générique
-            message = "Une erreur est survenue"
-        }
-        // Création du toast pour afficher l'erreur
-        Looper.prepare()
-        Toast.makeText(
-            this,
-            "Les identifiants sont érronés",
-            Toast.LENGTH_SHORT
-        ).show();
-        Looper.loop()
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.i("CIO", "Received message: ")
+        Log.i("CIO", "  - Path: " + messageEvent.path)
+        val message = String(messageEvent.data)
+        Log.i("CIO", "  - Content: $message")
+        // catch la réponse de la montre, traitement à faire avec google api
+        _textView.text = """
+            ${_textView.text}
+            $message
+            """.trimIndent()
     }
-
 }
 
