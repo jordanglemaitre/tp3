@@ -1,4 +1,4 @@
-package cci.android.jlocalisation.models
+package com.example.myapplication.models
 
 data class Adresse(val id :Integer,
                    val long:String,

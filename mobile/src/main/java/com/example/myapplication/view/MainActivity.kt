@@ -1,5 +1,6 @@
-package com.example.myapplication.View
+package com.example.myapplication.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -8,6 +9,7 @@ import com.example.myapplication.R
 import com.example.myapplication.api.RetrofitHolder
 import com.example.myapplication.api.services.JdevalikApiService
 import com.example.myapplication.models.User
+import com.example.myapplication.view.MapsActivity
 import com.google.android.gms.wearable.MessageClient.OnMessageReceivedListener
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
@@ -120,16 +122,18 @@ class MainActivity : AppCompatActivity(), OnMessageReceivedListener {
         Wearable.getMessageClient(this).addListener(this)
     }
 
+
     override fun onMessageReceived(messageEvent: MessageEvent) {
+
         Log.i("CIO", "Received message: ")
         Log.i("CIO", "  - Path: " + messageEvent.path)
         val message = String(messageEvent.data)
+        var latlon = message.split("-")
         Log.i("CIO", "  - Content: $message")
-        // catch la réponse de la montre, traitement à faire avec google api
-        _textView.text = """
-            ${_textView.text}
-            $message
-            """.trimIndent()
+        val intent = Intent(this, MapsActivity::class.java)
+        intent.putExtra("Lat", latlon[0].replace(",", "."))
+        intent.putExtra("Lon", latlon[1].replace(",", "."))
+        startActivity(intent)
     }
 }
 

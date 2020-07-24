@@ -78,7 +78,6 @@ class MainActivity : WearableActivity() , GoogleApiClient.ConnectionCallbacks, G
         }
 
         _memoButton.setOnClickListener{
-            Log.d("Zouz","zoug")
             val intent = Intent(this, ListActivity::class.java)
             startActivity(intent)
         }
@@ -113,7 +112,7 @@ class MainActivity : WearableActivity() , GoogleApiClient.ConnectionCallbacks, G
         val clientMessage : MessageClient = Wearable.getMessageClient(this)
         for (node in nodes) {
             Log.i("CIO", "  - to " + node.id)
-            val message = "Hello $lat $lon"
+            val message = "$lat-$lon"
             val sendMessageTask : Task<Int> =
                 clientMessage.sendMessage(node.id, "CIO", message.toByteArray())
         }
