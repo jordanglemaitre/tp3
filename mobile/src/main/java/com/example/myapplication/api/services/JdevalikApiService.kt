@@ -20,7 +20,7 @@ interface JdevalikApiService {
     ) : Call<Any>
 
     @Multipart
-    @POST("insertaddressbis.php")
+    @POST("insertaddress.php")
     fun insertAddress(
         @Part ("lon") lon : RequestBody,
         @Part ("lat") lat : RequestBody,

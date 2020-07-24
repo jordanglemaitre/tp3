@@ -9,7 +9,6 @@ import com.example.myapplication.R
 import com.example.myapplication.api.RetrofitHolder
 import com.example.myapplication.api.services.JdevalikApiService
 import com.example.myapplication.models.User
-import com.example.myapplication.view.MapsActivity
 import com.google.android.gms.wearable.MessageClient.OnMessageReceivedListener
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
@@ -125,11 +124,39 @@ class MainActivity : AppCompatActivity(), OnMessageReceivedListener {
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
 
-        Log.i("CIO", "Received message: ")
-        Log.i("CIO", "  - Path: " + messageEvent.path)
+        var context = this
+
         val message = String(messageEvent.data)
         var latlon = message.split("-")
-        Log.i("CIO", "  - Content: $message")
+        var idUser : String = "33"
+        
+        // Insertion via API
+        val jdevalikApiService: JdevalikApiService =
+            RetrofitHolder.retrofit.create(JdevalikApiService::class.java)
+        var latParams: RequestBody = latlon[0].toRequestBody(latlon[0].toMediaTypeOrNull())
+        var lonParams: RequestBody = latlon[1].toRequestBody(latlon[1].toMediaTypeOrNull())
+        var idUserParams: RequestBody = idUser.toRequestBody(idUser.toMediaTypeOrNull())
+        val result = jdevalikApiService.insertAddress(latParams, lonParams, idUserParams).also {
+            GlobalScope.launch {
+                try {
+                    it.await().also {
+                        withContext(Dispatchers.Main) {
+                            if(it == "false"){
+                                Toast.makeText(context, "Un problème est survenu lors de l'ajout de l'adresse.", Toast.LENGTH_SHORT).show()
+                                println(it)
+                            }else{
+                                Toast.makeText(context, "Adresse bien rajouté, vous allez être redirigé dans 2 secondes", Toast.LENGTH_SHORT).show()
+                                Thread.sleep(2000)
+                                println("{$it}test")
+                            }
+                        }
+                    }
+                } catch(e: HttpException) {
+                    // manageApiErrorResponse(e)
+                }
+            }
+        }
+
         val intent = Intent(this, MapsActivity::class.java)
         intent.putExtra("Lat", latlon[0].replace(",", "."))
         intent.putExtra("Lon", latlon[1].replace(",", "."))
